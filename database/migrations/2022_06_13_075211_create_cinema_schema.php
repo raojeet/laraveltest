@@ -35,9 +35,70 @@ class CreateCinemaSchema extends Migration
      * As a user I want to know where I'm sitting on my ticket
      * As a cinema owner I dont want to configure the seating for every show
      */
-    public function up()
+   public function up()
     {
-        throw new \Exception('implement in coding task 4, you can ignore this exception if you are just running the initial migrations.');
+        Schema::create('cinemas', static function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name');
+            $table->string('address');
+            $table->timestamps();
+        });
+
+        Schema::create('cinema_halls', static function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name');
+            $table->integer('cinema_id')->unsigned();
+            $table->foreign('cinema_id')->references('id')->on('cinemas');
+            $table->timestamps();
+        });
+
+        Schema::create('seat_types', static function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name');
+            $table->integer('percent');
+            $table->timestamps();
+        });
+
+        Schema::create('cinema_hall_seats', static function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('position'); //like A2, B22
+            $table->integer('cinema_hall_id')->unsigned();
+            $table->integer('seat_type_id')->unsigned();
+            $table->foreign('cinema_hall_id')->references('id')->on('cinema_halls');
+            $table->foreign('seat_type_id')->references('id')->on('seat_types');
+            $table->timestamps();
+        });
+
+        Schema::create('movies', static function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('title');
+            $table->integer('duration');
+            $table->timestamps();
+        });
+
+        Schema::create('shows', static function (Blueprint $table) {
+            $table->increments('id');
+            $table->integer('cinema_hall_id')->unsigned();
+            $table->integer('movie_id')->unsigned();
+            $table->integer('price');
+            $table->integer('status')->default(0);
+            $table->dateTime('start_time');
+            $table->dateTime('end_time');
+            $table->foreign('cinema_hall_id')->references('id')->on('cinema_halls');
+            $table->foreign('movie_id')->references('id')->on('movies');
+            $table->timestamps();
+        });
+
+        Schema::create('tickets', static function (Blueprint $table) {
+            $table->increments('id');
+            $table->integer('show_id')->unsigned();
+            $table->integer('cinema_hall_seat_id')->unsigned();
+            $table->integer('price');
+            $table->integer('status')->default(0);
+            $table->foreign('show_id')->references('id')->on('shows');
+            $table->foreign('cinema_hall_seat_id')->references('id')->on('cinema_hall_seats');
+            $table->timestamps();
+        });
     }
 
     /**
@@ -47,5 +108,12 @@ class CreateCinemaSchema extends Migration
      */
     public function down()
     {
+        Schema::drop('tickets');
+        Schema::drop('shows');
+        Schema::drop('movies');
+        Schema::drop('cinema_hall_seats');
+        Schema::drop('seat_types');
+        Schema::drop('cinema_halls');
+        Schema::drop('cinemas');
     }
 }
